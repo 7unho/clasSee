@@ -1,5 +1,6 @@
 package com.ssafy.api.service;
 
+import com.ssafy.api.request.UserFindPwPostReq;
 import com.ssafy.db.entity.user.Auth;
 import com.ssafy.db.repository.AuthRepository;
 import com.ssafy.db.repository.AuthRepositorySupport;
@@ -13,6 +14,7 @@ import com.ssafy.db.repository.UserRepository;
 import com.ssafy.db.repository.UserRepositorySupport;
 
 import java.util.Map;
+import java.util.Optional;
 
 /**
  *	유저 관련 비즈니스 로직 처리를 위한 서비스 구현 정의.
@@ -20,11 +22,12 @@ import java.util.Map;
 @Service("userService")
 public class UserServiceImpl implements UserService {
 	@Autowired
+	AuthRepository authRepository;
+	@Autowired
 	AuthRepositorySupport authRepositorySupport;
 
 	@Autowired
-	AuthRepository authRepository;
-
+	UserRepository userRepository;
 	@Autowired
 	UserRepositorySupport userRepositorySupport;
 
@@ -67,5 +70,12 @@ public class UserServiceImpl implements UserService {
 			user = userRepositorySupport.findByNickname(nickname).orElse(null);
 		}
 		return user;
+	}
+
+	@Override
+	public Optional<Auth> getUserByEmailAndName(UserFindPwPostReq userInfo) {
+		String email = userInfo.getEmail();
+		String name = userInfo.getName();
+		return userRepository.findUserByEmailAndName(email, name);
 	}
 }

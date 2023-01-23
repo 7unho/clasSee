@@ -1,6 +1,9 @@
 package com.ssafy.db.repository;
 
+import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.jpa.impl.JPAQueryFactory;
+import com.ssafy.api.request.UserFindPwPostReq;
+import com.ssafy.db.entity.user.Auth;
 import com.ssafy.db.entity.user.QAuth;
 import com.ssafy.db.entity.user.QUser;
 import com.ssafy.db.entity.user.User;
