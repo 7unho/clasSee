@@ -4,6 +4,8 @@ import com.ssafy.api.request.OrdersRegistPostReq;
 import com.ssafy.api.request.PhotocardRegistPostReq;
 import com.ssafy.api.response.NoticeInfoRes;
 import com.ssafy.api.response.OrdersInfoGetRes;
+import com.ssafy.api.response.OrdersListGetRes;
+import com.ssafy.api.response.OrdersPageGetRes;
 import com.ssafy.api.service.OrdersService;
 import com.ssafy.common.exception.handler.LessonException;
 import com.ssafy.common.exception.handler.OpenLessonException;
@@ -11,13 +13,17 @@ import com.ssafy.common.exception.handler.OrdersException;
 import com.ssafy.common.exception.handler.UserException;
 import com.ssafy.common.model.response.*;
 import com.ssafy.db.entity.board.Notice;
+import com.ssafy.db.entity.orders.Orders;
 import io.swagger.annotations.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import retrofit2.http.Path;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Random;
+import java.util.stream.Collectors;
 
 @Api(value = "주문 API", tags = {"Orders"})
 @RestController
@@ -84,7 +90,7 @@ public class OrdersController {
             @ApiResponse(code = 404, message = "해당 자료 없음", response = NotFoundErrorResponseBody.class),
             @ApiResponse(code = 500, message = "서버 오류", response = ServerErrorResponseBody.class)
     })
-    public ResponseEntity<?> getNoticeInfo(@RequestParam String email, @RequestParam Long openLessonId){
+    public ResponseEntity<?> getOrdersInfo(@RequestParam String email, @RequestParam Long openLessonId){
 
         OrdersInfoGetRes ordersInfoGetRes = new OrdersInfoGetRes();
 
@@ -101,6 +107,37 @@ public class OrdersController {
         }
 
         return ResponseEntity.status(200).body(ordersInfoGetRes);
+    }
+
+    @GetMapping("/{email}/info")
+    @ApiOperation(value = "주문 리스트, 로그인 O", notes = "내가 한 주문들을 확인")
+    @ApiResponses({
+            @ApiResponse(code = 200, message = "성공", response = OrdersPageGetRes.class),
+            @ApiResponse(code = 401, message = "인증 실패", response = InvalidErrorResponseBody.class),
+            @ApiResponse(code = 404, message = "해당 자료 없음", response = NotFoundErrorResponseBody.class),
+            @ApiResponse(code = 500, message = "서버 오류", response = ServerErrorResponseBody.class)
+    })
+    public ResponseEntity<?> getOrdersListInfo(@PathVariable String email, @RequestParam int offset, @RequestParam int limit){
+
+        List<Orders> ordersList = new ArrayList<>();
+
+        try {
+            ordersList = ordersService.readOrdersList(email, offset, limit);
+        } catch (UserException u){
+            return ResponseEntity.status(404).body("user not found");
+        }
+
+        List<OrdersListGetRes> ordersListGetResList =
+                ordersList.stream().map(o -> new OrdersListGetRes(o)).collect(Collectors.toList());
+
+        Long ordersCount = ordersService.countOrders(email);
+
+        OrdersPageGetRes ordersPageGetRes = new OrdersPageGetRes();
+        ordersPageGetRes.setCount(ordersCount);
+        ordersPageGetRes.setOrdersListGetResList(ordersListGetResList);
+
+        return ResponseEntity.status(200).body(ordersPageGetRes);
+
     }
 
     @DeleteMapping("/{ordersId}")

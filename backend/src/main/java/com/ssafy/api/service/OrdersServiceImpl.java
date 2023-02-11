@@ -18,6 +18,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Service
 @Transactional
@@ -120,6 +121,24 @@ public class OrdersServiceImpl implements OrdersService{
         }
 
         return;
+    }
+
+    @Override
+    public List<Orders> readOrdersList(String email, int offset, int limit) throws UserException {
+        Long user_id = userRepositorySupport.findId(email);
+
+        if(user_id == null){
+            throw new UserException("user not found");
+        }
+
+        return ordersRepositorySupport.findList(user_id, offset, limit);
+    }
+
+    @Override
+    public Long countOrders(String email) {
+        Long user_id = userRepositorySupport.findId(email);
+
+        return ordersRepositorySupport.countOrders(user_id);
     }
 
     @Override
